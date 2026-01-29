@@ -1,0 +1,340 @@
+#project
+#traffic management system
+create database traffic;
+use traffic;
+
+
+
+CREATE TABLE users (
+    userid INT PRIMARY KEY AUTO_INCREMENT,
+    user_name VARCHAR(20) NOT NULL,
+    licence_no VARCHAR(20) UNIQUE NOT NULL,
+    phone_number VARCHAR(10),
+    CHECK (LENGTH(phone_number) = 10)
+);
+
+
+
+INSERT INTO users (user_name, licence_no, phone_number) VALUES
+('Arun Kumar',   'TN01A1001', '9876543210'),
+('Divya Sharma', 'KA02B1002', '9123456781'),
+('Rahul Verma',  'MH03C1003', '9988776655'),
+('Sneha Iyer',   'TN04D1004', '9876501234'),
+('Vikram Singh', 'RJ05E1005', '9012345678'),
+('Anita Paul',   'WB06F1006', '9090909090'),
+('Rohit Mehta',  'GJ07G1007', '8899776655'),
+('Kavya Nair',   'KL08H1008', '9445566778'),
+('Suresh Rao',   'AP09I1009', '9556677889'),
+('Neha Gupta',   'DL10J1010', '9876123456'),
+('Manoj Patil',  'MH11K1011', '9123987654'),
+('Pooja Das',    'OD12L1012', '9877001122'),
+('Amit Joshi',   'UP13M1013', '9812345670'),
+('Riya Malhotra','PB14N1014', '9898989898'),
+('Karthik S',    'TN15O1015', '9000011111'),
+('Sunita Roy',   'AS16P1016', '9333444555'),
+('Naveen Kumar', 'KA17Q1017', '9666777888'),
+('Meena Bala',   'TN18R1018', '9777888999'),
+('Prakash J',    'PY19S1019', '9888999000'),
+('Farhan Ali',   'TS20T1020', '9111222333');
+
+
+select * from users;
+
+
+CREATE TABLE Vehicles(
+vehicle_no int primary key,
+vehicle_type varchar(10),
+vehicle_name varchar(10),
+user_id int,
+foreign key(user_id) references users(userid)
+);
+
+INSERT INTO Vehicles (vehicle_no, vehicle_type, vehicle_name, user_id) VALUES
+(1001, 'Bike', 'Honda', 1),
+(1002, 'Car', 'Hyundai', 2),
+(1003, 'Bike', 'Yamaha', 3),
+(1004, 'Car', 'Tata', 4),
+(1005, 'Bike', 'Bajaj', 5),
+(1006, 'Car', 'Maruti', 6),
+(1007, 'Bike', 'TVS', 7),
+(1008, 'Car', 'Kia', 8),
+(1009, 'Bike', 'Suzuki', 9),
+(1010, 'Car', 'Toyota', 10);
+
+
+select * from Vehicles;
+
+
+
+Create table violations(
+violation_id int primary key,
+violation_type varchar(100),
+violation_date date,
+vehicle_no int,
+fine_amount decimal(10,4),
+paid_amount decimal(10,4),
+status varchar(20) default "Pending",
+foreign key(vehicle_no) references Vehicles(vehicle_no)
+);
+
+INSERT INTO violations
+(violation_id, violation_type, violation_date, vehicle_no, fine_amount, paid_amount, status)
+VALUES
+(1, 'No Helmet', CURDATE(), 1001, 500.00, 500.00, 'Completed'),
+(2, 'Signal Jump', CURDATE()-INTERVAL 1 DAY, 1002, 1000.00, 500.00, 'Pending'),
+(3, 'Over Speed', CURDATE()-INTERVAL 2 DAY, 1003, 1500.00, 1500.00, 'Completed'),
+(4, 'Wrong Parking', CURDATE()-INTERVAL 3 DAY, 1004, 300.00, 0.00, 'Pending'),
+(5, 'No Helmet', CURDATE()-INTERVAL 4 DAY, 1005, 500.00, 500.00, 'Completed'),
+(6, 'Signal Jump', CURDATE()-INTERVAL 5 DAY, 1006, 1000.00, 1000.00, 'Completed'),
+(7, 'Over Speed', CURDATE()-INTERVAL 6 DAY, 1007, 1500.00, 700.00, 'Pending'),
+(8, 'Wrong Parking', CURDATE()-INTERVAL 7 DAY, 1008, 300.00, 300.00, 'Completed'),
+(9, 'No Helmet', CURDATE()-INTERVAL 8 DAY, 1009, 500.00, 0.00, 'Pending'),
+(10,'Signal Jump', CURDATE()-INTERVAL 9 DAY, 1010, 1000.00, 1000.00, 'Completed');
+
+INSERT INTO violations
+(violation_id, violation_type, violation_date, vehicle_no, fine_amount, paid_amount, status)
+VALUES(11,'No Helmet','2023-09-23',1001,1000,250,'Pending'),
+(12,'Signal Jump',current_date(),1006,500,500,'Completed');
+select * from violations;
+
+
+Create table Payments(
+payment_id int primary key,
+payment_date date,
+violation_id int ,
+amount_paid decimal(10,4),
+foreign key(violation_id) references violations(violation_id)
+);
+
+INSERT INTO Payments
+(payment_id, payment_date, violation_id, amount_paid)
+VALUES
+(101, CURDATE(), 1, 500.00),
+(102, CURDATE(), 2, 500.00),
+(103, CURDATE(), 3, 1500.00),
+(104, CURDATE(), 5, 500.00),
+(105, CURDATE(), 6, 1000.00),
+(106, CURDATE(), 7, 700.00),
+(107, CURDATE(), 8, 300.00),
+(108, CURDATE(), 10, 1000.00);
+INSERT INTO Payments
+(payment_id, payment_date, violation_id, amount_paid)
+VALUES(109,"2025-11-29",2,1000.00),
+(110,"2024-12-20",3,200.00);
+
+select * from Payments;
+
+
+#to show maximum fine paid by date
+select max(amount_paid) from payments where payment_date=curdate();
+
+#to show pending fines
+select * from violations where status="Pending";
+
+#to show total fine paid between dates
+select sum(amount_paid) from payments where payment_date between "2024-01-01" and "2026-01-01";
+
+
+#to retrive amount paid(total) by date
+select sum(amount_paid) from payments where payment_date=curdate();
+
+
+#to show fine amount paid by owners
+SELECT u.user_name, SUM(p.amount_paid) AS total_paid
+FROM Payments p
+JOIN violations vi ON p.violation_id = vi.violation_id
+JOIN Vehicles v ON vi.vehicle_no = v.vehicle_no
+JOIN users u ON v.user_id = u.userid
+GROUP BY u.user_name;
+
+#to print the total fine paid
+SELECT payment_date, SUM(amount_paid) AS total_collected
+FROM payments
+GROUP BY payment_date;
+
+# to show owner with more than one violations
+select u.user_name ,count(*) from violations vi 
+join vehicles v on vi.vehicle_no=v.vehicle_no
+join users u on v.user_id=u.userid
+group by u.user_name 
+having count(*)>1;
+
+# to display vehicles with owner
+SELECT u.user_name, v.vehicle_no, v.vehicle_type
+FROM Vehicles v
+JOIN users u ON v.user_id = u.userid;
+
+#to modify users and see the length
+SELECT UPPER(user_name), LENGTH(user_name)
+FROM users;
+
+#indexes
+CREATE table idx_vehicle_no (select vehicle_no from vehicles);
+select * from idx_vehicle_no;
+
+#analytical function
+SELECT vehicle_no, violation_date,
+ROW_NUMBER() OVER (PARTITION BY vehicle_no ORDER BY violation_date) AS violation_no
+FROM violations;
+
+#views to retrive status by current date
+create view view_status1 as select status from violations where violation_date=curdate();
+select * from view_status1;
+
+#union functions
+select * from users union all select * from vehicles;
+
+#if null function
+select *,ifnull(vehicle_no,'NIL') as valuess_veh from vehicles;
+
+# amount paid by user
+select *,coalesce(fine_amount, paid_amount) as amount from violations  ;
+
+#ranking fines
+select payment_id,rank() over (order by amount_paid ) from payments;
+
+#vehicles with more than one violation
+
+SELECT *
+FROM vehicles v
+WHERE NOT EXISTS (
+SELECT 1 FROM violations vi
+WHERE vi.vehicle_no = v.vehicle_no
+);
+
+# retriving users who have violations
+SELECT * FROM users
+WHERE userid IN (
+SELECT user_id FROM vehicles
+WHERE vehicle_no IN (SELECT vehicle_no FROM violations));
+
+# case : to show category of fine
+SELECT violation_type,
+CASE
+WHEN fine_amount > 1000 THEN 'High'
+ELSE 'Low'
+END AS fine_category
+FROM violations;
+
+# triggers on automatic fine setting
+delimiter $$
+CREATE TRIGGER trg_set_fine
+BEFORE INSERT ON violations
+FOR EACH ROW
+BEGIN
+IF NEW.violation_type = 'Signal Jump' THEN
+SET NEW.fine_amount = 1000;
+ELSEIF NEW.violation_type = 'Over Speed' THEN
+SET NEW.fine_amount = 1500;
+ELSEIF NEW.violation_type = 'No Helmet' THEN
+SET NEW.fine_amount = 500;
+ELSE
+SET NEW.fine_amount = 300;
+END IF;
+END $$
+delimiter ;
+
+
+# triggers on automatic status updation
+delimiter $$
+CREATE TRIGGER trg_update_payment
+AFTER INSERT ON payments
+FOR EACH ROW
+BEGIN
+UPDATE violations
+SET paid_amount = paid_amount + NEW.amount_paid,
+status = CASE
+WHEN paid_amount + NEW.amount_paid >= fine_amount
+THEN 'Completed'
+ELSE 'Pending'
+END
+WHERE violation_id = NEW.violation_id;
+END $$
+delimiter ;
+SHOW CREATE TRIGGER trg_set_fine;
+SHOW CREATE TRIGGER trg_update_payment;
+INSERT INTO violations
+(violation_id, violation_type, violation_date, vehicle_no, fine_amount, paid_amount, status)
+VALUES
+(20, 'Signal Jump', CURDATE(), 1001, NULL, 0, 'Pending');
+SELECT violation_id, violation_type, fine_amount
+FROM violations
+WHERE violation_id = 20;
+
+INSERT INTO payments
+(payment_id, payment_date, violation_id, amount_paid)
+VALUES
+(200, CURDATE(), 20, 1000);
+SELECT violation_id, fine_amount, paid_amount, status
+FROM violations
+WHERE violation_id = 20;
+
+#comments
+CREATE TABLE fine (
+    fine_id INT PRIMARY KEY AUTO_INCREMENT,
+    vehicle_no INT,
+    violation_id INT,
+    status_veh VARCHAR(20),
+    FOREIGN KEY (vehicle_no) REFERENCES Vehicles(vehicle_no),
+    FOREIGN KEY (violation_id) REFERENCES violations(violation_id),
+    CHECK (status_veh IN ('Pending', 'Completed'))) COMMENT='This shows the fine status for each vehicle';
+INSERT INTO fine (vehicle_no, violation_id, status_veh) VALUES
+(1001, 1, 'Completed'),
+(1002, 2, 'Pending'),
+(1003, 3, 'Completed'),
+(1004, 4, 'Pending'),
+(1005, 5, 'Completed'),
+(1006, 6, 'Completed'),
+(1007, 7, 'Pending'),
+(1008, 8, 'Completed'),
+(1009, 9, 'Pending'),
+(1010, 10, 'Completed');
+
+select * from fine;
+
+
+# stored procedure to view pending finess
+DELIMITER $$
+
+CREATE PROCEDURE view_pending_fines ()
+BEGIN
+    SELECT 
+        u.user_name,
+        v.vehicle_no,
+        vi.violation_type,
+        vi.fine_amount,
+        vi.paid_amount,
+        vi.status
+    FROM violations vi
+    JOIN Vehicles v ON vi.vehicle_no = v.vehicle_no
+    JOIN users u ON v.user_id = u.userid
+    WHERE vi.status = 'Pending';
+END $$
+
+DELIMITER ;
+CALL view_pending_fines();
+
+
+#access
+#user creation 
+CREATE USER 'traffic_user'@'localhost' IDENTIFIED BY 'traffic123';
+# grant all access for ttraffic officer
+GRANT ALL PRIVILEGES
+ON traffic_db.*
+TO 'traffic_user'@'localhost';
+show grants for 'traffic_user'@'localhost';
+#revole all privileges
+revoke all privileges 
+ON traffic_db.*
+from 'traffic_user'@'localhost';
+#grant some access to police
+GRANT insert,update,delete
+ON traffic_db.*
+TO 'traffic_user'@'localhost';
+#revoke delete from user
+revoke delete
+ON traffic_db.*
+from 'traffic_user'@'localhost';
+
+
+
